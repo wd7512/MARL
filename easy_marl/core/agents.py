@@ -248,14 +248,13 @@ class PPOAgent(BaseAgent):
         # Serialize the current model state
         model_state = self.save_to_bytes()
         
+        # Cache the deserialized model to avoid repeated deserialization overhead
+        import io
+        buffer = io.BytesIO(model_state)
+        frozen_model = PPO.load(buffer, env=self.env)
+        
         def act_fn(obs):
-            # Create a temporary agent with the frozen model state
-            # Note: This is less efficient but ensures true freezing
-            # For better performance, consider caching the deserialized model
-            import io
-            buffer = io.BytesIO(model_state)
-            temp_model = PPO.load(buffer)
-            action, _ = temp_model.predict(obs, deterministic=deterministic)
+            action, _ = frozen_model.predict(obs, deterministic=deterministic)
             return action
 
         return act_fn
