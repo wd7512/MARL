@@ -104,6 +104,8 @@ def convert_np_to_python(obj):
     """Convert numpy types to Python native types for JSON serialization."""
     if isinstance(obj, dict):
         return {k: convert_np_to_python(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_np_to_python(item) for item in obj]
     elif isinstance(obj, np.ndarray):
         return obj.tolist()
     elif isinstance(obj, (np.float32, np.float64)):

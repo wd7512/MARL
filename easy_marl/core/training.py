@@ -349,17 +349,18 @@ def _train_single_agent_worker(
     set_all_seeds(training_seed)
 
     # Deserialize all agents
-    # Note: env_factory should handle creating proper environments
-    # This is a placeholder - actual implementation depends on domain
+    # Note: Agents are created with env=None initially. This is okay because:
+    # 1. The agent being trained will get its env set immediately below
+    # 2. Other agents are only used for their fixed_act_function(), which doesn't need env
+    # 3. The env_factory receives the agents list and can handle environment creation
     from easy_marl.core.agents import PPOAgent
 
     agents = []
     for i, state in enumerate(agents_states):
-        # This is simplified - actual implementation needs proper env
         agent = PPOAgent.from_bytes(state, env=None)
         agents.append(agent)
 
-    # Create environment and train
+    # Create environment and set it for the agent being trained
     env = env_factory(agent_index=agent_index, agents=agents, seed=training_seed)
     agents[agent_index].model.set_env(env)
     agents[agent_index].train(total_timesteps=timesteps_per_agent)

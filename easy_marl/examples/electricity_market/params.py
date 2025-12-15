@@ -8,6 +8,13 @@ for training and evaluation.
 import numpy as np
 from typing import Dict
 
+# Try to import scipy for advanced demand profiles, fall back to simple profiles if not available
+try:
+    from scipy.interpolate import CubicSpline
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
+
 
 def make_default_params(N: int = 5, T: int = 24) -> Dict:
     """
@@ -155,9 +162,7 @@ def _example_demand_profile() -> np.ndarray:
     Returns:
         Array of hourly demand values for one week (168 hours).
     """
-    try:
-        from scipy.interpolate import CubicSpline
-    except ImportError:
+    if not HAS_SCIPY:
         # Fallback to simple pattern if scipy not available
         return _simple_weekly_profile()
 
