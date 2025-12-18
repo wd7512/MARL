@@ -1,4 +1,5 @@
 import numpy as np
+
 from easy_marl.examples.bidding.market import market_clearing, sigmoid
 
 

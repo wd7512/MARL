@@ -53,16 +53,16 @@ To ensure consistent results between sequential and parallel training modes:
 3. Agents are serialized/deserialized using full state preservation (including optimizer).
 """
 
+import json
 import os
 import random
-import numpy as np
-import torch
-from typing import List, Dict, Tuple
 from concurrent.futures import ProcessPoolExecutor, as_completed
-import json
-import psutil
 
-from easy_marl.src.agents import PPOAgent, BaseAgent
+import numpy as np
+import psutil
+import torch
+
+from easy_marl.src.agents import BaseAgent, PPOAgent
 from easy_marl.src.environment import MARLElectricityMarketEnv
 
 MAX_ENV_PROCS = psutil.cpu_count(logical=False) or os.cpu_count()
@@ -93,7 +93,7 @@ ppo_params = {
 }
 
 
-def make_competitive_params(N: int = 8, T: int = 24, competition_rate=2) -> Dict:
+def make_competitive_params(N: int = 8, T: int = 24, competition_rate=2) -> dict:
     """
     Create competitive environment parameters.
 
@@ -132,7 +132,7 @@ def make_competitive_params(N: int = 8, T: int = 24, competition_rate=2) -> Dict
     return params
 
 
-def make_default_params(N: int = 5, T: int = 24) -> Dict:
+def make_default_params(N: int = 5, T: int = 24) -> dict:
     """
     Create default environment parameters.
 
@@ -166,8 +166,8 @@ def make_default_params(N: int = 5, T: int = 24) -> Dict:
 
 def make_env_for_agent(
     agent_index: int,
-    agents: List[BaseAgent],
-    params: Dict,
+    agents: list[BaseAgent],
+    params: dict,
     observer_name: str = DEFAULT_OBS,
     seed: int = None,
 ) -> MARLElectricityMarketEnv:
@@ -210,8 +210,8 @@ def make_env_for_agent(
 
 
 def init_agents(
-    N: int, params: Dict, seed: int, observer_name: str = DEFAULT_OBS
-) -> List[PPOAgent]:
+    N: int, params: dict, seed: int, observer_name: str = DEFAULT_OBS
+) -> list[PPOAgent]:
     """Initialize N agents with default PPO configuration."""
     agents = []
     for i in range(N):
@@ -247,12 +247,12 @@ def convert_np_to_python(obj):
 
 
 def evaluate_agents(
-    agents: List[BaseAgent],
-    params: Dict,
+    agents: list[BaseAgent],
+    params: dict,
     num_episodes: int = 1,
     seed: int = None,
     observer_name: str = DEFAULT_OBS,
-) -> Dict:
+) -> dict:
     """
     Evaluate trained agents over multiple episodes.
 
@@ -329,15 +329,15 @@ def evaluate_agents(
 def _train_agent_core(
     agent_index: int,
     round_idx: int,
-    agents: List[PPOAgent],
-    params: Dict,
+    agents: list[PPOAgent],
+    params: dict,
     timesteps_per_agent: int,
     save_dir: str,
     verbose: bool,
     N: int,
     seed: int,
     observer_name: str = DEFAULT_OBS,
-) -> Dict:
+) -> dict:
     """
     Core training logic shared between sequential and parallel modes.
 
@@ -420,7 +420,7 @@ def sequential_train(
     T: int = 24,
     observer_name: str = DEFAULT_OBS,
     update_probability: float = DEFAULT_UPDATE_PROB,
-) -> Tuple[List[PPOAgent], Dict]:
+) -> tuple[list[PPOAgent], dict]:
     """
     Single-process training with configurable update schedule (IBR or SBR).
 
@@ -606,15 +606,15 @@ def train_single_agent_worker(
     agent_index: int,
     round_idx: int,
     agent_state: bytes,
-    agents_states: List[bytes],
-    params: Dict,
+    agents_states: list[bytes],
+    params: dict,
     timesteps_per_agent: int,
     save_dir: str,
     verbose: bool,
     N: int,
     seed: int,
     observer_name: str = DEFAULT_OBS,
-) -> Tuple[int, bytes, Dict]:
+) -> tuple[int, bytes, dict]:
     """
     Worker function to train a single agent in a separate process.
 
@@ -682,7 +682,7 @@ def parallel_train(
     T: int = 24,
     observer_name: str = DEFAULT_OBS,
     update_probability: float = DEFAULT_UPDATE_PROB,
-) -> Tuple[List[PPOAgent], Dict]:
+) -> tuple[list[PPOAgent], dict]:
     """
     Simultaneous Best Response (SBR) training with Jacobi-style updates.
 
@@ -845,7 +845,7 @@ def parallel_train(
 def auto_train(
     N: int = 5,
     num_rounds: int = 3,
-    timesteps_per_agent: int = 24*4,
+    timesteps_per_agent: int = 24 * 4,
     seed: int = 42,
     save_dir: str = "outputs",
     verbose: bool = True,
@@ -854,7 +854,7 @@ def auto_train(
     observer_name: str = DEFAULT_OBS,
     update_probability: float = DEFAULT_UPDATE_PROB,
     **kwargs,
-) -> Tuple[List[PPOAgent], Dict]:
+) -> tuple[list[PPOAgent], dict]:
     """
     Automatically choose between sequential and parallel training based on system resources.
     """

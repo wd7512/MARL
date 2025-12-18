@@ -1,9 +1,10 @@
 """Gymnasium-compatible multi-agent electricity market environment."""
 
+from collections.abc import Callable
+
 import gymnasium as gym
-from gymnasium import spaces
 import numpy as np
-from typing import Callable, Dict, Optional, Tuple
+from gymnasium import spaces
 
 from easy_marl.examples.bidding.market import market_clearing
 from easy_marl.src.observators import OBSERVERS
@@ -87,7 +88,7 @@ class MARLElectricityMarketEnv(gym.Env):
 
         # place to store other agents' fixed action functions:
         # mapping agent_index -> function(obs) -> action (2-vector)
-        self.other_action_fns: Dict[int, Callable] = {}
+        self.other_action_fns: dict[int, Callable] = {}
 
         # outputs / internal state
         self.reset(seed=seed)
@@ -133,7 +134,7 @@ class MARLElectricityMarketEnv(gym.Env):
 
         return self._get_obs(), {}
 
-    def _get_obs(self, agent_index: Optional[int] = None) -> np.ndarray:
+    def _get_obs(self, agent_index: int | None = None) -> np.ndarray:
         """Return the normalized observation vector for ``agent_index``."""
 
         if agent_index is None:
@@ -182,7 +183,7 @@ class MARLElectricityMarketEnv(gym.Env):
 
     def step(
         self, action, fixed_evaluation: bool = False
-    ) -> Tuple[Optional[np.ndarray], float, bool, bool, Dict[str, float]]:
+    ) -> tuple[np.ndarray | None, float, bool, bool, dict[str, float]]:
         """Advance the environment by one hour of bidding/clearing."""
         # Reset bids/q to default baseline
         # self.q_all[:] = self.K  # default: offer max capacity
@@ -252,7 +253,7 @@ class MARLElectricityMarketEnv(gym.Env):
         self.np_random, seed = gym.utils.seeding.np_random(seed)
         return [seed]
 
-    def get_metadata(self) -> Dict[str, float]:
+    def get_metadata(self) -> dict[str, float]:
         """Return a JSON-serializable dictionary describing the environment."""
 
         return {

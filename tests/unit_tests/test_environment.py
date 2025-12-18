@@ -1,5 +1,6 @@
-import numpy as np
 import gymnasium as gym
+import numpy as np
+
 from easy_marl.src.environment import MARLElectricityMarketEnv
 
 

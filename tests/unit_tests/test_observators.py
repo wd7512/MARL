@@ -1,5 +1,6 @@
-import pytest
 import numpy as np
+import pytest
+
 from easy_marl.src.observators import OBSERVERS
 
 # Define constants for the test

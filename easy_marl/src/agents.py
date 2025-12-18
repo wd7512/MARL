@@ -2,10 +2,11 @@
 Agent implementations for multi-agent electricity market simulation.
 """
 
-import torch
 from abc import ABC, abstractmethod
+from collections.abc import Callable
+
+import torch
 from stable_baselines3 import PPO
-from typing import Callable
 
 
 class BaseAgent(ABC):
