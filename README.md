@@ -1,6 +1,6 @@
 # Easy MARL
 
-A generic Multi-Agent Reinforcement Learning (MARL) framework with a complete electricity market example. Built on Gymnasium and Stable-Baselines3, easy_marl provides clean abstractions for multi-agent learning with support for both Iterated Best Response (IBR) and Simultaneous Best Response (SBR) training.
+A generic Multi-Agent Reinforcement Learning (MARL) framework with complete examples including electricity market bidding and Snake game. Built on Gymnasium and Stable-Baselines3, easy_marl provides clean abstractions for multi-agent learning with support for both Iterated Best Response (IBR) and Simultaneous Best Response (SBR) training.
 
 ## Features
 
@@ -8,7 +8,9 @@ A generic Multi-Agent Reinforcement Learning (MARL) framework with a complete el
 - **PPO-Based Learning**: Built on Stable-Baselines3 with proper policy freezing for multi-agent scenarios
 - **Training Flexibility**: Both sequential (IBR/SBR) and parallel execution modes
 - **Reproducibility**: Explicit seeding across Python, NumPy, and PyTorch
-- **Complete Example**: Full electricity market bidding simulation with strategic generators
+- **Complete Examples**: 
+  - Electricity market bidding simulation with strategic generators
+  - Snake game (single-agent for now) demonstrating game-based RL
 
 ## Install
 
@@ -23,6 +25,8 @@ pip install -e ".[dev]"
 ```
 
 ## Quick Start
+
+### Electricity Market Example
 
 Run the electricity market training example:
 
@@ -39,6 +43,23 @@ from easy_marl.examples.electricity_market.training import auto_train
 agents, info = auto_train(N=5, num_rounds=3, timesteps_per_agent=5000)
 ```
 
+### Snake Game Example
+
+Run the Snake game training example:
+
+```bash
+python examples_snake_demo.py
+```
+
+Or use the API directly:
+
+```python
+from easy_marl.examples.snake.training import train
+
+# Train a single agent to play Snake
+agent, info = train(timesteps=100000, board_size=15, seed=42)
+```
+
 ## Project Structure
 
 ```
@@ -48,14 +69,20 @@ easy_marl/
     environment.py              # MARLEnvironment base class
     training.py                 # Generic sequential/parallel training loops
   examples/
-    electricity_market/         # Complete example application
+    electricity_market/         # Multi-agent electricity market example
       environment.py            # ElectricityMarketEnv (extends MARLEnvironment)
       market.py                 # Market clearing mechanisms (Numba-optimized)
       observators.py            # Observation builders for market state
       params.py                 # Parameter generation utilities
       training.py               # Market-specific training wrappers
+    snake/                      # Single-agent Snake game example
+      engine.py                 # Snake game logic using bitboard representation
+      environment.py            # SnakeEnv (extends MARLEnvironment)
+      observators.py            # Observation builders for Snake state
+      training.py               # Snake-specific training utilities
 tests/                          # Unit tests
-main.py                         # Entry point example
+main.py                         # Entry point for electricity market
+examples_snake_demo.py          # Entry point for Snake game
 ```
 
 ### Backward Compatibility
@@ -108,6 +135,47 @@ agents, info = parallel_train(
     n_workers=4  # Number of parallel processes
 )
 ```
+
+## Snake Game Example
+
+The Snake example demonstrates how to use the MARL framework for a classic single-agent game:
+
+```python
+from easy_marl.examples.snake.training import train, evaluate_agent
+
+# Train an agent
+agent, info = train(
+    timesteps=100000,
+    board_size=15,
+    seed=42,
+    save_dir="outputs/snake"
+)
+
+# Evaluate the trained agent
+eval_results = evaluate_agent(
+    agent,
+    params={"board_size": 15},
+    num_episodes=10,
+    seed=42
+)
+
+print(f"Mean food collected: {eval_results['mean_food']:.1f}")
+print(f"Max snake length: {eval_results['mean_max_snake_length']:.1f}")
+```
+
+The Snake environment features:
+- **Bitboard representation** for efficient state management
+- **24-dimensional observation space** including:
+  - Distance to walls in cardinal and diagonal directions
+  - Distance to food in all directions
+  - Distance to body segments in all directions
+- **Simple action space**: 4 discrete actions (Left, Up, Right, Down)
+- **Reward structure**:
+  - +10 for eating food
+  - -0.01 per move (encourages efficiency)
+  - -1 for dying (collision with wall or body)
+
+This example is based on the [Snake-Learning](https://github.com/wd7512/Snake-Learning) implementation.
 
 ## Extending to New Domains
 
