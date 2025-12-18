@@ -154,6 +154,12 @@ class SnakeVisualizer:
         plt.ion()  # Interactive mode
         fig, ax = plt.subplots(figsize=(8, 8))
         
+        # Configure plot settings (these don't change between frames)
+        ax.set_xlim(0, self.board_size)
+        ax.set_ylim(0, self.board_size)
+        ax.set_aspect('equal')
+        ax.axis('off')
+        
         for episode in range(num_episodes):
             print(f"\n{'=' * 50}")
             print(f"Episode {episode + 1}/{num_episodes}")
@@ -161,6 +167,12 @@ class SnakeVisualizer:
             
             for state_grid, score, steps, done, info in self.play_episode():
                 ax.clear()
+                
+                # Re-apply axis settings after clear
+                ax.set_xlim(0, self.board_size)
+                ax.set_ylim(0, self.board_size)
+                ax.set_aspect('equal')
+                ax.axis('off')
                 
                 # Draw grid
                 for i in range(self.board_size):
@@ -172,12 +184,6 @@ class SnakeVisualizer:
                             facecolor=color
                         )
                         ax.add_patch(rect)
-                
-                # Configure plot
-                ax.set_xlim(0, self.board_size)
-                ax.set_ylim(0, self.board_size)
-                ax.set_aspect('equal')
-                ax.axis('off')
                 
                 # Add title with game info
                 snake_length = info['snake_length']
@@ -192,7 +198,9 @@ class SnakeVisualizer:
             print(f"Episode finished: Score={score}, Steps={steps}, Length={info['snake_length']}")
             
             if save_path and episode == 0:
-                os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else '.', exist_ok=True)
+                save_dir = os.path.dirname(save_path)
+                if save_dir:
+                    os.makedirs(save_dir, exist_ok=True)
                 plt.savefig(save_path, dpi=150, bbox_inches='tight')
                 print(f"Screenshot saved to: {save_path}")
             
@@ -277,7 +285,9 @@ Examples:
         from stable_baselines3 import PPO
         model = PPO.load(args.model)
         
-        # Create a dummy PPOAgent wrapper
+        # Create a PPOAgent wrapper with the loaded model
+        # Note: We need a temporary environment to initialize the agent structure,
+        # but the actual model is loaded from the saved file
         params = {"board_size": args.board_size}
         env = SnakeEnv(
             agents=[],
