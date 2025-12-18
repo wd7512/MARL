@@ -18,7 +18,7 @@ class BaseAgent(ABC):
     def __init__(self, env=None):
         """
         Initialize base agent.
-        
+
         Args:
             env: Optional environment instance for the agent.
         """
@@ -28,11 +28,11 @@ class BaseAgent(ABC):
     def act(self, obs: Any, deterministic: bool = True) -> Any:
         """
         Return an action given an observation.
-        
+
         Args:
             obs: Observation from the environment.
             deterministic: Whether to use deterministic policy.
-            
+
         Returns:
             Action to take in the environment.
         """
@@ -42,13 +42,13 @@ class BaseAgent(ABC):
     def fixed_act_function(self, deterministic: bool = True) -> Callable:
         """
         Return a frozen action function for use by other agents.
-        
+
         This method should return a function that captures the current policy
         and won't change even if the agent is trained further.
-        
+
         Args:
             deterministic: Whether the returned function should be deterministic.
-            
+
         Returns:
             A callable that maps observation to action.
         """
@@ -57,9 +57,9 @@ class BaseAgent(ABC):
     def train(self, *args, **kwargs):
         """
         Train the agent (optional).
-        
+
         Override if the agent supports learning.
-        
+
         Raises:
             NotImplementedError: If the agent type does not support training.
         """
@@ -69,7 +69,7 @@ class BaseAgent(ABC):
 class SimpleAgent(BaseAgent):
     """
     Simple baseline agent that returns a default action.
-    
+
     This agent is useful for testing and as a baseline opponent.
     By default, it returns a null action [0.0, 0.0].
     """
@@ -77,22 +77,24 @@ class SimpleAgent(BaseAgent):
     def __init__(self, env=None, default_action=None):
         """
         Initialize simple agent.
-        
+
         Args:
             env: Optional environment instance.
             default_action: Action to always return. Defaults to [0.0, 0.0].
         """
         super().__init__(env)
-        self.default_action = default_action if default_action is not None else [0.0, 0.0]
+        self.default_action = (
+            default_action if default_action is not None else [0.0, 0.0]
+        )
 
     def act(self, obs: Any, deterministic: bool = True) -> np.ndarray:
         """
         Return the default action.
-        
+
         Args:
             obs: Observation (ignored).
             deterministic: Whether to use deterministic policy (ignored).
-            
+
         Returns:
             The default action.
         """
@@ -101,13 +103,13 @@ class SimpleAgent(BaseAgent):
     def fixed_act_function(self, deterministic: bool = True) -> Callable:
         """
         Return a frozen action function.
-        
+
         The function captures the current default_action by value,
         so changes to self.default_action won't affect it.
-        
+
         Args:
             deterministic: Whether the function should be deterministic (ignored).
-            
+
         Returns:
             A function that always returns the captured action.
         """
@@ -123,7 +125,7 @@ class SimpleAgent(BaseAgent):
 class PPOAgent(BaseAgent):
     """
     Proximal Policy Optimization (PPO) agent for reinforcement learning.
-    
+
     This agent uses a neural network policy to learn optimal strategies.
     It can be used in any MARL environment that follows the Gymnasium API.
     """
@@ -234,7 +236,7 @@ class PPOAgent(BaseAgent):
     def fixed_act_function(self, deterministic: bool = True) -> Callable:
         """
         Return a frozen action function for use by other agents.
-        
+
         This method creates a snapshot of the current policy by serializing
         the model state. The returned function will not change even if the
         agent is trained further.
@@ -247,12 +249,13 @@ class PPOAgent(BaseAgent):
         """
         # Serialize the current model state
         model_state = self.save_to_bytes()
-        
+
         # Cache the deserialized model to avoid repeated deserialization overhead
         import io
+
         buffer = io.BytesIO(model_state)
         frozen_model = PPO.load(buffer, env=self.env)
-        
+
         def act_fn(obs):
             action, _ = frozen_model.predict(obs, deterministic=deterministic)
             return action
@@ -262,7 +265,7 @@ class PPOAgent(BaseAgent):
     def save(self, path: str):
         """
         Save model to disk.
-        
+
         Args:
             path: Path where model should be saved.
         """
@@ -271,7 +274,7 @@ class PPOAgent(BaseAgent):
     def load(self, path: str):
         """
         Load model from disk.
-        
+
         Args:
             path: Path to saved model.
         """

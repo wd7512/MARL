@@ -7,8 +7,7 @@ This module provides backward compatibility for agent classes.
 import warnings
 
 warnings.warn(
-    "easy_marl.src.agents is deprecated. "
-    "Please use easy_marl.core.agents instead.",
+    "easy_marl.src.agents is deprecated. Please use easy_marl.core.agents instead.",
     DeprecationWarning,
     stacklevel=2,
 )

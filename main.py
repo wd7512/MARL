@@ -12,7 +12,7 @@ from easy_marl.examples.electricity_market.training import auto_train
 def main():
     print("Hello from easy_marl!")
     print("Running electricity market MARL training example...")
-    
+
     auto_train()
 
 

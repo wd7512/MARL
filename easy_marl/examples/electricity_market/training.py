@@ -42,13 +42,13 @@ def init_agents(
 ) -> List[PPOAgent]:
     """
     Initialize N agents for electricity market.
-    
+
     Args:
         N: Number of agents.
         params: Environment parameters.
         seed: Random seed.
         observer_name: Type of observation function.
-    
+
     Returns:
         List of initialized PPOAgent objects.
     """
@@ -80,14 +80,14 @@ def make_env_for_agent(
 ) -> ElectricityMarketEnv:
     """
     Create environment instance for a specific agent.
-    
+
     Args:
         agent_index: Index of the agent to train.
         agents: List of all agent objects.
         params: Environment parameters.
         seed: Random seed.
         observer_name: Type of observation function.
-    
+
     Returns:
         ElectricityMarketEnv configured for the specified agent.
     """
@@ -210,10 +210,10 @@ def sequential_train(
 ) -> Tuple[List[PPOAgent], Dict]:
     """
     Sequential training for electricity market agents.
-    
+
     This is a wrapper around the generic sequential_train that provides
     electricity market-specific configuration and evaluation.
-    
+
     Args:
         N: Number of generators.
         num_rounds: Number of training rounds.
@@ -226,30 +226,28 @@ def sequential_train(
         T: Time horizon (hours).
         observer_name: Type of observation function.
         update_probability: Probability of agent update per round.
-    
+
     Returns:
         agents: List of trained agents.
         training_info: Training metadata dictionary.
     """
     # Generate parameters
     params = param_func(N=N, T=T)
-    
+
     # Initialize agents
     agents = init_agents(N, params, seed, observer_name)
-    
+
     # Create environment factory
     def env_factory(agent_index: int, agents: List, seed: int):
-        return make_env_for_agent(
-            agent_index, agents, params, seed, observer_name
-        )
-    
+        return make_env_for_agent(agent_index, agents, params, seed, observer_name)
+
     # Create evaluation function
     def evaluation_fn(agents: List) -> Dict:
         metrics = evaluate_agents(
             agents, params, num_episodes=1, seed=seed, observer_name=observer_name
         )
         return convert_np_to_python(metrics)
-    
+
     # Call generic training
     agents, training_info = core_sequential_train(
         agents=agents,
@@ -263,13 +261,13 @@ def sequential_train(
         update_probability=update_probability,
         evaluation_fn=evaluation_fn,
     )
-    
+
     # Save training summary
     if save_dir is not None:
         summary_path = os.path.join(save_dir, "training_summary.json")
         with open(summary_path, "w") as f:
             json.dump(training_info, f, indent=4)
-    
+
     return agents, training_info
 
 
@@ -288,10 +286,10 @@ def parallel_train(
 ) -> Tuple[List[PPOAgent], Dict]:
     """
     Parallel training for electricity market agents.
-    
+
     This is a wrapper around the generic parallel_train that provides
     electricity market-specific configuration and evaluation.
-    
+
     Args:
         N: Number of generators.
         num_rounds: Number of training rounds.
@@ -304,30 +302,28 @@ def parallel_train(
         T: Time horizon (hours).
         observer_name: Type of observation function.
         update_probability: Probability of agent update per round.
-    
+
     Returns:
         agents: List of trained agents.
         training_info: Training metadata dictionary.
     """
     # Generate parameters
     params = param_func(N=N, T=T)
-    
+
     # Initialize agents
     agents = init_agents(N, params, seed, observer_name)
-    
+
     # Create environment factory
     def env_factory(agent_index: int, agents: List, seed: int):
-        return make_env_for_agent(
-            agent_index, agents, params, seed, observer_name
-        )
-    
+        return make_env_for_agent(agent_index, agents, params, seed, observer_name)
+
     # Create evaluation function
     def evaluation_fn(agents: List) -> Dict:
         metrics = evaluate_agents(
             agents, params, num_episodes=1, seed=seed, observer_name=observer_name
         )
         return convert_np_to_python(metrics)
-    
+
     # Call generic training
     agents, training_info = core_parallel_train(
         agents=agents,
@@ -341,13 +337,13 @@ def parallel_train(
         update_probability=update_probability,
         evaluation_fn=evaluation_fn,
     )
-    
+
     # Save training summary
     if save_dir is not None:
         summary_path = os.path.join(save_dir, "training_summary.json")
         with open(summary_path, "w") as f:
             json.dump(training_info, f, indent=4)
-    
+
     return agents, training_info
 
 
@@ -366,11 +362,11 @@ def auto_train(
 ) -> Tuple[List[PPOAgent], Dict]:
     """
     Automatically choose between sequential and parallel training.
-    
+
     Selection criteria:
     - Use sequential for small problems (N < 2 or timesteps < 4000)
     - Use parallel for larger problems to leverage multi-core CPUs
-    
+
     Args:
         N: Number of generators.
         num_rounds: Number of training rounds.
@@ -383,7 +379,7 @@ def auto_train(
         observer_name: Type of observation function.
         update_probability: Probability of agent update per round.
         **kwargs: Additional arguments passed to parallel_train.
-    
+
     Returns:
         agents: List of trained agents.
         training_info: Training metadata dictionary.
@@ -392,24 +388,48 @@ def auto_train(
         if verbose:
             print("Auto training: N < 2, using sequential training")
         return sequential_train(
-            N, num_rounds, timesteps_per_agent, seed, save_dir, verbose,
-            param_func, T=T, observer_name=observer_name,
-            update_probability=update_probability
+            N,
+            num_rounds,
+            timesteps_per_agent,
+            seed,
+            save_dir,
+            verbose,
+            param_func,
+            T=T,
+            observer_name=observer_name,
+            update_probability=update_probability,
         )
 
     if timesteps_per_agent < 4000:
         if verbose:
-            print("Auto training: timesteps_per_agent < 4000, using sequential training")
+            print(
+                "Auto training: timesteps_per_agent < 4000, using sequential training"
+            )
         return sequential_train(
-            N, num_rounds, timesteps_per_agent, seed, save_dir, verbose,
-            param_func, T=T, observer_name=observer_name,
-            update_probability=update_probability
+            N,
+            num_rounds,
+            timesteps_per_agent,
+            seed,
+            save_dir,
+            verbose,
+            param_func,
+            T=T,
+            observer_name=observer_name,
+            update_probability=update_probability,
         )
     else:
         if verbose:
             print("Auto training: timesteps_per_agent >= 4000, using parallel training")
         return parallel_train(
-            N, num_rounds, timesteps_per_agent, seed, save_dir, verbose,
-            param_func, T=T, observer_name=observer_name,
-            update_probability=update_probability, **kwargs
+            N,
+            num_rounds,
+            timesteps_per_agent,
+            seed,
+            save_dir,
+            verbose,
+            param_func,
+            T=T,
+            observer_name=observer_name,
+            update_probability=update_probability,
+            **kwargs,
         )

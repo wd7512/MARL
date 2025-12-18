@@ -21,7 +21,7 @@ UNIT_LOL_PENALTY = 1
 class ElectricityMarketEnv(MARLEnvironment):
     """
     Electricity market environment for multi-agent bidding simulation.
-    
+
     This environment simulates proportional bidding for multiple generators
     in a day-ahead market. Generators submit quantity-price bids, and the
     market clears based on merit order.
@@ -37,7 +37,7 @@ class ElectricityMarketEnv(MARLEnvironment):
     ) -> None:
         """
         Initialize electricity market environment.
-        
+
         Args:
             agents: List of agent objects.
             params: Environment parameters including:
@@ -64,7 +64,7 @@ class ElectricityMarketEnv(MARLEnvironment):
         self.base_D_profile = self.D_profile.copy()
         self.K = np.array(params["capacities"], dtype=np.float32)
         self.c = np.array(params["costs"], dtype=np.float32)
-        
+
         # Validation
         assert len(self.D_profile) == self.T, (
             f"Demand profile length does not match T: {len(self.D_profile)} != {self.T}"
@@ -102,14 +102,12 @@ class ElectricityMarketEnv(MARLEnvironment):
 
     def _build_observation_space(self) -> spaces.Space:
         """Build observation space based on selected observer."""
-        return spaces.Box(
-            low=0, high=np.inf, shape=(self.obs_dim,), dtype=np.float32
-        )
+        return spaces.Box(low=0, high=np.inf, shape=(self.obs_dim,), dtype=np.float32)
 
     def _build_action_space(self) -> spaces.Space:
         """
         Build action space for generator bidding.
-        
+
         Action space is 2D:
         - action[0]: Quantity fraction (0 to 1, where 0 = full capacity)
         - action[1]: Price parameter (-bound to +bound, transformed via tanh)
@@ -147,7 +145,7 @@ class ElectricityMarketEnv(MARLEnvironment):
     ) -> float:
         """
         Compute reward for electricity market participation.
-        
+
         Reward components:
         1. Base revenue: (clearing_price - cost) * quantity_cleared
         2. Bid penalty: -lambda * (bid - cost)^2  [regularization]
@@ -205,14 +203,14 @@ class ElectricityMarketEnv(MARLEnvironment):
     def update_agent_bid(self, action: np.ndarray, agent_idx: int) -> None:
         """
         Convert agent action into quantity and price bids.
-        
+
         Args:
             action: [quantity_fraction, price_parameter]
             agent_idx: Index of the agent submitting the bid
         """
         # Quantity: action[0] = 0 means full capacity, 1 means zero capacity
         q_t = float(1 - action[0]) * self.K[agent_idx]
-        
+
         # Price: cost + tanh(action[1]) * max_bid_delta
         b_t = float(self.c[agent_idx]) + float(np.tanh(action[1])) * self.max_bid_delta
 
@@ -222,20 +220,20 @@ class ElectricityMarketEnv(MARLEnvironment):
     def update_all_bids(self, exclude_agent_index: bool = True) -> None:
         """
         Populate bids for all agents using their fixed policies.
-        
+
         Args:
             exclude_agent_index: If True, skip the agent being trained.
         """
         for j in range(self.N):
             if exclude_agent_index and j == self.agent_index:
                 continue
-            
+
             fn = self.fixed_policies[j]
             if fn is not None:
                 obs_j = self._get_obs(agent_index=j)
                 act_j = fn(obs_j)
                 act_j = np.asarray(act_j, dtype=np.float32)
-                
+
                 if act_j.size >= 2:
                     self.update_agent_bid(act_j, j)
                 else:
@@ -248,11 +246,11 @@ class ElectricityMarketEnv(MARLEnvironment):
     ) -> Tuple[Optional[np.ndarray], float, bool, bool, Dict]:
         """
         Execute one timestep of market clearing.
-        
+
         Args:
             action: Action from the agent being trained (or None if fixed_evaluation).
             fixed_evaluation: If True, use fixed policies for all agents.
-        
+
         Returns:
             Tuple of (observation, reward, terminated, truncated, info).
         """
@@ -270,9 +268,7 @@ class ElectricityMarketEnv(MARLEnvironment):
             self.update_agent_bid(action, self.agent_index)
 
         # Run market clearing
-        P_t, q_cleared = market_clearing(
-            self.b_all, self.q_all, self.D_profile[self.t]
-        )
+        P_t, q_cleared = market_clearing(self.b_all, self.q_all, self.D_profile[self.t])
 
         # Compute rewards
         base_rewards = (P_t - self.c) * q_cleared
@@ -306,7 +302,7 @@ class ElectricityMarketEnv(MARLEnvironment):
 
         terminated = done
         truncated = False
-        
+
         return obs, r[self.agent_index], terminated, truncated, {}
 
     def render(self) -> None:

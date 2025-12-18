@@ -11,6 +11,7 @@ from typing import Dict
 # Try to import scipy for advanced demand profiles, fall back to simple profiles if not available
 try:
     from scipy.interpolate import CubicSpline
+
     HAS_SCIPY = True
 except ImportError:
     HAS_SCIPY = False
@@ -107,10 +108,10 @@ def make_advanced_params(N: int = 5, T: int = 7 * 24) -> Dict:
     """
     # Get plant data (can be extended to load from CSV)
     plant_data = _example_plant_data(N)
-    
+
     # Generate weekly demand profile
     demand_profile = _example_demand_profile()
-    
+
     # Scale demand to match system capacity
     demand_profile = demand_profile * sum(plant_data["capacities"]) * 0.75
 
@@ -129,10 +130,10 @@ def make_advanced_params(N: int = 5, T: int = 7 * 24) -> Dict:
 def _example_plant_data(N: int = 5) -> Dict:
     """
     Generate example plant data including renewable generators.
-    
+
     Args:
         N: Number of generators.
-    
+
     Returns:
         Dictionary with plant characteristics.
     """
@@ -148,17 +149,17 @@ def _example_plant_data(N: int = 5) -> Dict:
             "capacities": [30.0 * 5 / N] * N,
             "srmc": list(np.linspace(10, 30, N)),
         }
-    
+
     for key in plant_data:
         plant_data[key] = np.asarray(plant_data[key])
-    
+
     return plant_data
 
 
 def _example_demand_profile() -> np.ndarray:
     """
     Generate realistic weekly demand profile with different weekday/weekend patterns.
-    
+
     Returns:
         Array of hourly demand values for one week (168 hours).
     """
@@ -183,7 +184,7 @@ def _example_demand_profile() -> np.ndarray:
 
     # Construct weekly profile (5 weekdays, 2 weekends)
     demand_profile = np.concatenate([weekday_profile] * 5 + [weekend_profile] * 2)
-    
+
     # Normalize
     demand_profile = demand_profile / demand_profile.max()
 
@@ -193,19 +194,19 @@ def _example_demand_profile() -> np.ndarray:
 def _simple_weekly_profile() -> np.ndarray:
     """
     Simple weekly demand profile fallback (no scipy required).
-    
+
     Returns:
         Array of hourly demand values for one week.
     """
     # Simple sinusoidal pattern with weekday/weekend variation
     T = 7 * 24
     t = np.arange(T)
-    
+
     # Daily cycle
     daily = np.sin(2 * np.pi * t / 24 + np.pi / 2) * 0.3 + 0.7
-    
+
     # Weekly modulation (lower on weekends)
     weekly = np.where((t // 24) >= 5, 0.85, 1.0)  # Days 5-6 are weekend
-    
+
     demand_profile = daily * weekly
     return demand_profile / demand_profile.max()
