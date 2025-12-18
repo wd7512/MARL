@@ -51,6 +51,12 @@ Run the Snake game training example:
 python examples_snake_demo.py
 ```
 
+Visualize a trained agent:
+
+```bash
+python visualize_snake.py
+```
+
 Or use the API directly:
 
 ```python
@@ -174,6 +180,24 @@ The Snake environment features:
   - +10 for eating food
   - -0.01 per move (encourages efficiency)
   - -1 for dying (collision with wall or body)
+
+### Visualization
+
+Watch your trained agent play with the visualization tool:
+
+```bash
+# Basic visualization
+python visualize_snake.py
+
+# Custom options
+python visualize_snake.py --delay 0.05 --episodes 3 --save screenshot.png
+```
+
+Features:
+- Real-time animated display with color-coded grid
+- Live statistics (score, steps, snake length)
+- Configurable speed and board size
+- Screenshot capture support
 
 This example is based on the [Snake-Learning](https://github.com/wd7512/Snake-Learning) implementation.
 
