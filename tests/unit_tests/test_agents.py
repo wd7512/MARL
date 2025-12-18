@@ -1,8 +1,9 @@
-from easy_marl.src.agents import SimpleAgent, PPOAgent
-from easy_marl.src.environment import MARLElectricityMarketEnv
-import pytest
 import numpy as np
+import pytest
 import torch
+
+from easy_marl.src.agents import PPOAgent, SimpleAgent
+from easy_marl.src.environment import MARLElectricityMarketEnv
 
 
 def mock_env():
