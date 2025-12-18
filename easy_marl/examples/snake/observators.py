@@ -44,10 +44,10 @@ def get_simple_observation(board) -> np.ndarray:
     out[3] = board.size - out[1] - 1
 
     # Distance to walls (diagonal directions)
-    out[4] = (out[0] + out[1] - 1) / 2
-    out[5] = (out[1] + out[2] - 1) / 2
-    out[6] = (out[2] + out[3] - 1) / 2
-    out[7] = (out[3] + out[0] - 1) / 2
+    out[4] = max(0, (out[0] + out[1] - 1) / 2)
+    out[5] = max(0, (out[1] + out[2] - 1) / 2)
+    out[6] = max(0, (out[2] + out[3] - 1) / 2)
+    out[7] = max(0, (out[3] + out[0] - 1) / 2)
 
     # Distance to food (cardinal directions)
     if head_loc[0] == food_loc[0]:
@@ -134,9 +134,16 @@ def get_simple_observation(board) -> np.ndarray:
                     out[23] = min(out[23], abs(diff_x))
 
     # Normalize all features to [0, 1]
-    for i in range(len(out)):
-        if out[i] != 0:
-            out[i] = (board.size - out[i] - 1) / (board.size - 2)
+    # Ensure board.size > 2 to avoid division by zero
+    if board.size > 2:
+        for i in range(len(out)):
+            if out[i] != 0:
+                out[i] = (board.size - out[i] - 1) / (board.size - 2)
+    else:
+        # For very small boards, just normalize by board size
+        for i in range(len(out)):
+            if out[i] != 0:
+                out[i] = out[i] / board.size
 
     return out
 

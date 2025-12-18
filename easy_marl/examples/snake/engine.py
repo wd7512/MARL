@@ -12,6 +12,8 @@ import numpy as np
 
 def index(b: int) -> int:
     """Convert bitboard position to index."""
+    if b <= 0:
+        return 0
     return math.log(b) / math.log(2)
 
 
@@ -130,7 +132,7 @@ class SnakeBoard:
                 choices.append(i)
 
         if choices:
-            loc = random.choice(choices)
+            loc = self.rng.choice(choices)
             self.food = bini(loc)
         else:
             # Board is full - game over
