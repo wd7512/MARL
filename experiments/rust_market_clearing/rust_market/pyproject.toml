@@ -1,0 +1,15 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "rust_market"
+version = "0.1.0"
+description = "Rust-based market clearing for MARL electricity market"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.24.0",
+]
+
+[tool.maturin]
+module-name = "rust_market"

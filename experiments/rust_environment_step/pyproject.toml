@@ -1,0 +1,15 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "rust_env_step"
+version = "0.1.0"
+description = "Rust-based environment step functions for MARL"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.24.0",
+]
+
+[tool.maturin]
+module-name = "rust_env_step"
