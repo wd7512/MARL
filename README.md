@@ -64,6 +64,24 @@ uv run pytest -q
 - Example code lives under `easy_marl/examples/bidding` to keep core MARL generic.
 - Outputs are written to `outputs/` and excluded from packaging.
 
+## Rust-Python Interoperability Study
+
+A performance study was conducted comparing Rust (via PyO3) and Python (numba) implementations of the market clearing algorithm. See [RUST_PERFORMANCE_STUDY.md](RUST_PERFORMANCE_STUDY.md) for complete results and analysis.
+
+**Key findings:**
+- Rust implementation available in `rust_market/` directory
+- Python/numba is ~1.4x faster for this specific algorithm
+- Both implementations validated for correctness
+- Demonstrates successful PyO3 integration patterns
+
+To build and test the Rust extension:
+```bash
+cd rust_market
+maturin build --release
+pip install target/wheels/rust_market-*.whl
+python ../performance_test.py
+```
+
 ## License
 
 Choose and add a license (e.g., MIT or Apache-2.0) before public release.
