@@ -63,44 +63,73 @@ cd experiments/rust_environment_step
 maturin build --release
 pip install target/wheels/rust_env_step-*.whl
 
-# Run performance test
+# Run comprehensive Python vs Rust performance comparison
+python performance_comparison.py
+
+# Or run standalone Rust-only test (doesn't need easy_marl)
+python test_rust_only.py
+
+# Or run original performance test (requires easy_marl installed)
 python performance_test.py
 ```
 
-## Expected Results
+## Performance Results (Python vs Rust)
 
 ### Environment Step Performance
 
-The Rust version should show more significant speedup here because:
-- Combines multiple operations (market clearing + rewards)
-- Avoids Python function call overhead
-- Reduces memory allocation/copying
-- Better cache locality
+Complete environment step function (market clearing + rewards calculation) benchmarked over 1000 iterations:
 
-**Predicted speedup**: 1.5x - 3x for typical problem sizes
+| Generators | Python/numba | Rust/PyO3 | Speedup | Winner |
+|------------|--------------|-----------|---------|--------|
+| 5          | 11.68 μs     | 0.91 μs   | **12.80x** | Rust |
+| 10         | 11.58 μs     | 1.10 μs   | **10.56x** | Rust |
+| 20         | 11.71 μs     | 1.55 μs   | **7.53x**  | Rust |
+| 50         | 12.34 μs     | 3.02 μs   | **4.09x**  | Rust |
+| 100        | 13.03 μs     | 5.57 μs   | **2.34x**  | Rust |
+
+**Average Speedup: 7.46x** ✅
+
+**Key Finding**: Rust dramatically outperforms Python for combined operations because:
+- Eliminates multiple Python-Rust boundary crossings
+- Keeps all intermediate data in Rust (no copying)
+- Compiler can optimize across the entire operation
+- No Python function call overhead
 
 ### Observer Performance
 
-Observers are simpler functions but called frequently (every step).
+Benchmarked over 10,000 iterations:
 
-**Simple Observer** (basic arithmetic):
-- Python: ~0.5 μs
-- Rust: ~0.3 μs
-- Predicted speedup: ~1.5x
+**Simple Observer** (4 features: demand, capacity, cost, hour):
+- Python: 0.73 μs
+- Rust: 0.23 μs
+- **Speedup: 3.17x** ✅
 
-**Simple Observer V3** (with trigonometry):
-- Python: ~2 μs
-- Rust: ~0.5 μs  
-- Predicted speedup: ~3-4x (Rust's libm is very fast)
+**Simple Observer V3** (7 features with sin/cos encoding):
+- Python: 3.92 μs
+- Rust: 0.29 μs
+- **Speedup: 13.41x** ✅
 
-## Why This Might Be More Promising
+**Key Finding**: Rust's trigonometric functions (libm) are extremely fast, providing massive speedup for observers with cyclic time encoding.
 
-### Compared to Market Clearing Alone
+## Why This IS Much More Promising
 
-1. **More operations per call**: The environment step does market clearing + rewards + state updates
-2. **Better amortization**: Fixed overhead of crossing Python-Rust boundary is spread over more work
-3. **Less memory pressure**: Intermediate results stay in Rust
-4. **Compiler opportunities**: LLVM can optimize across the combined operations
+### Actual Results vs Market Clearing Alone
+
+**Market Clearing Experiment** (Experiment 1):
+- Average speedup: **0.70x** (Python/numba was 1.45x faster)
+- Rust wins only for <10 generators
+- Single isolated function limited by boundary crossing overhead
+
+**Environment Step Experiment** (Experiment 2):
+- Average speedup: **7.46x** (Rust is dramatically faster)
+- Rust wins across all problem sizes (5-100 generators)
+- Combined operations eliminate boundary crossing penalty
+
+**The Difference**:
+1. **More operations per call**: Environment step does market clearing + rewards + state updates in one Rust call
+2. **Eliminated overhead**: Only ONE Python-Rust crossing instead of multiple
+3. **Data locality**: All intermediate results stay in Rust memory
+4. **Cross-operation optimization**: LLVM can optimize across the entire pipeline
 
 ### Real Training Impact
 
@@ -153,7 +182,9 @@ experiments/rust_environment_step/
 ├── pyproject.toml              # Python packaging
 ├── src/
 │   └── lib.rs                  # Rust implementation
-└── performance_test.py         # Benchmark script
+├── performance_comparison.py   # Full Python vs Rust benchmark (standalone)
+├── performance_test.py         # Original benchmark (needs easy_marl)
+└── test_rust_only.py           # Rust-only tests
 ```
 
 ## Troubleshooting
@@ -203,9 +234,11 @@ If this experiment shows promising results:
 | Operations | 1 (clearing only) | 3+ (clearing + rewards + obs) |
 | Boundary crossings | 1 per call | 1 per combined call |
 | Python overhead | Significant | Amortized |
-| Expected speedup | 0.7x - 1.2x | 1.5x - 3x |
-| Real-world impact | Low (not bottleneck) | Medium (called frequently) |
+| **Actual speedup** | **0.70x (slower)** | **7.46x (faster!)** |
+| Real-world impact | Low (not bottleneck) | High (called frequently) |
 | Integration complexity | Low | Medium |
+
+**Conclusion**: Combining operations in Rust provides dramatic performance improvements that isolated functions cannot achieve.
 
 ## References
 

@@ -26,20 +26,29 @@ These experiments demonstrate how Rust (via PyO3) can be integrated with Python-
 **What**: Rust implementation of complete environment step + observers  
 **Goal**: Test Rust for combined operations (market clearing + rewards + observations)  
 **Status**: ✅ Complete  
-**Result**: More promising than market clearing alone
+**Result**: Dramatically faster than Python - **7.46x average speedup!**
 
-**Performance**:
-- Environment step (combined operations): 0.9-5.7 μs depending on problem size
-- Simple observer: 0.25 μs
-- Observer V3 (with trig): 0.29 μs
+**Performance Comparison (Python/numba vs Rust)**:
+
+| Generators | Python | Rust | Speedup |
+|------------|--------|------|---------|
+| 5          | 11.68 μs | 0.91 μs | 12.80x |
+| 10         | 11.58 μs | 1.10 μs | 10.56x |
+| 20         | 11.71 μs | 1.55 μs | 7.53x |
+| 50         | 12.34 μs | 3.02 μs | 4.09x |
+| 100        | 13.03 μs | 5.57 μs | 2.34x |
+
+**Observer Functions**:
+- Simple observer: 3.17x faster (0.23 μs vs 0.73 μs)
+- Observer V3 (trig): 13.41x faster (0.29 μs vs 3.92 μs)
 
 **Key Advantages**:
-1. Combines multiple operations → amortizes boundary crossing overhead
-2. Eliminates intermediate memory allocations
-3. Enables cross-operation compiler optimizations
-4. Very fast trigonometric functions (observer V3)
+1. Combines multiple operations → eliminates boundary crossing overhead
+2. All data stays in Rust (no intermediate copies)
+3. Cross-operation compiler optimizations
+4. Extremely fast trigonometric functions
 
-**Recommendation**: Consider for production if training time is a concern
+**Recommendation**: **Strong candidate for production use** - provides real, measurable speedup
 
 ---
 
@@ -76,7 +85,9 @@ python performance_test.py
 cd experiments/rust_environment_step
 maturin build --release
 pip install target/wheels/rust_env_step-*.whl
-python test_rust_only.py
+
+# Run comprehensive Python vs Rust comparison
+python performance_comparison.py
 ```
 
 ## Results Summary
@@ -91,12 +102,14 @@ python test_rust_only.py
 
 ### Experiment 2: Environment Step
 
-| Component | Time (μs) | Notes |
-|-----------|-----------|-------|
-| Full step (5 gen) | 0.93 | Market + rewards combined |
-| Full step (100 gen) | 5.67 | Scales linearly |
-| Observer (simple) | 0.25 | 4 features |
-| Observer V3 (trig) | 0.29 | 7 features with sin/cos |
+| Component | Python | Rust | Speedup |
+|-----------|--------|------|---------|
+| Env step (5 gen) | 11.68 μs | 0.91 μs | **12.80x** |
+| Env step (100 gen) | 13.03 μs | 5.57 μs | **2.34x** |
+| Observer (simple) | 0.73 μs | 0.23 μs | **3.17x** |
+| Observer V3 (trig) | 3.92 μs | 0.29 μs | **13.41x** |
+
+**Average environment step speedup: 7.46x** ✅
 
 ## Key Learnings
 
